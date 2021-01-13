@@ -115,7 +115,7 @@ void Heap_Counting(char operand) {
         HEAPCOUNT --;
         printf("HEAPCOUNT--\n");
     }
-    printf("\nAssigned %d struct onto Heap.\n", HEAPCOUNT);
+    printf("Assigned %d struct onto Heap.\n", HEAPCOUNT);
 }
 
 //! 트리 생성 함수
