@@ -74,59 +74,43 @@ unsigned int HEAPCOUNT = 0;
 //! ------------------- MAIN 함수 --------------------//
 int main()
 {
-    printf("================================= START ===============================\n\n");
-    srand((unsigned int)time(NULL));
-    BPLUSTREE tree;
+srand((unsigned int)time(NULL));
+    BPLUSTREE tree, prevTree;
     Tree_Create(&tree);
-    Print_Tree(tree.root, 0);
-    //Insert_Of_N(&tree, 10);
-    Insert(&tree, 10);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 20);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 30);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 40);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 50);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 60);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 80);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 90);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 20);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 10);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 30);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 50);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 40);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 60);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 80);
-    Print_Tree(tree.root, 0);
-    Deletion(&tree, 90);
-    Print_Tree(tree.root, 0);
-
-    Insert(&tree, 30);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 20);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 40);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 100);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 80);
-    Print_Tree(tree.root, 0);
-    Insert(&tree, 50);
-    Print_Tree(tree.root, 0);
-
-    printf("\n\n================================= END ===============================\n\n");
+    int keyValue;
+    char *command = malloc(4 * sizeof(char));
+    while(true) {
+        system("cls");
+        Print_Tree(tree.root, 0);
+        printf("\n\ncommand - ins, del, sch, prv\nex) [ins 10], [prv 'any Int']\n >>");
+        scanf("%s %d",command, &keyValue);
+        if (!strcmp(command,"ins")) {
+            Insert(&tree, keyValue);
+            Print_Tree(tree.root, 0);
+            prevTree = tree;
+        }
+        else if(!strcmp(command,"del")){
+            Deletion(&tree, keyValue);
+            Print_Tree(tree.root, 0);
+            prevTree = tree;
+        }
+        else if(!strcmp(command,"sch")){
+            if(Search(tree.root, keyValue)){
+                printf("keyValue [%d] exist.\n", keyValue);
+                getchar(); getchar();
+            }
+        }
+        else if(!strcmp(command,"prv")){
+            printf("\n");
+            Print_Tree(prevTree.root, 0);
+            getchar(); getchar();
+        }
+        else {
+            printf("wrong command OR something wrong\n");
+            return 0;
+        }
+        printf("\n\n====================================================================\n\n");
+    }
     // Heap_Counting('*');
     return 0;
 }
