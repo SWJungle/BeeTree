@@ -102,9 +102,9 @@ int main()
     Print_Tree(tree.root, 0);
     Deletion(&tree, 30);
     Print_Tree(tree.root, 0);
-    Deletion(&tree, 40);
-    Print_Tree(tree.root, 0);
     Deletion(&tree, 50);
+    Print_Tree(tree.root, 0);
+    Deletion(&tree, 40);
     Print_Tree(tree.root, 0);
     Deletion(&tree, 60);
     Print_Tree(tree.root, 0);
@@ -158,7 +158,6 @@ void Heap_Counting(char operand)
         HEAPCOUNT--;
         printf("HEAPCOUNT--\n");
     }
-
     printf("Assigned %d struct onto Heap.\n\n", HEAPCOUNT);
 }
 
@@ -388,79 +387,46 @@ bool Search(BNODE *node, int keyValue)
 
 void SearchForDel(BPLUSTREE *tree, BNODE *node, int keyValue)
 {
-    // 해당 key가 현재 node에 있는가?
-    int index = Find_Value(node, keyValue);
-    if (index == -1)
+    if ( node->leaf )
     {
-        SearchForDel(tree, node->childs[Find_ChildIndex(node, keyValue)], keyValue);
+        Final_Delete(node,keyValue);
+    }
+    else if ( node->childs[0]->leaf)
+    {
+        int childIndex = Find_ChildIndex(node,keyValue);
+        Final_Delete(node->childs[childIndex],keyValue);
+        if (childIndex == 0)
+        {
+            for (int i = childIndex; i < node->KeyCount - 1; ++i)
+            {
+                node->keys[i] = node->keys[i + 1];
+            }
+        }
+        else
+        {
+            for (int i = childIndex - 1; i < node->KeyCount - 1; ++i)
+            {
+                node->keys[i] = node->keys[i + 1];
+            }
+        }
+
+        for (int i = childIndex; i < node->KeyCount; ++i)
+        {
+            node->childs[i] = node->childs[i + 1];
+        }
+        node->KeyCount--;
+
+        if (node->KeyCount == 0)
+        {
+            tree->root = node->childs[0];
+            free(node);
+            printf("root is changed \n");
+            Heap_Counting('-');
+        }
     }
     else
     {
-        // 있으면 리프인가? 내부인가?
-        if (node->leaf)
-        {
-            // 리프이면서 leaf의 keycount 가 T-1 이상인 경우 바로 삭제한다.
-
-            //! 아래 사항 수정함.
-            if (node->KeyCount > T - 1 || (node == tree->root && node->KeyCount <= T - 1))
-            {
-                //! 필요가 없는~~~~듯/.
-                // int index = Find_ChildIndex(node, keyValue);
-                Final_Delete(node, keyValue);
-            }
-
-            // leaf의 keycount가 T-1보다 적은 경우 삭제가능한 환경을 구축해야해서, DELETION을 만들어야한다.
-
-            else
-            {
-                // 삭제 가능한 환경을 구축해야함.
-                // ArrangeForDel 안에서 Final_Delete를 실행한다.
-                Arrange_for_Delete(tree, tree->root, keyValue);
-            }
-        }
-
-        //! key를 찾았는데, leaf노드가 아니고, 키 개수가 충분하지 않은 경우
-        else if (!node->leaf && node->KeyCount < T)
-        {
-            Arrange_for_Delete(tree, tree->root, keyValue);
-        }
-
-        // else
-        // {
-        //     //! k`을 찾는다.
-        //     int childIndex = Find_ChildIndex(node, keyValue);
-        //     int keyPrime;
-        //     if (node->childs[childIndex]->KeyCount >= T)
-        //     {
-        //         keyPrime = Find_KeyPrime_Presuccecor(node->childs[childIndex], keyValue);
-        //         node->keys[index] = keyPrime;
-        //         Arrange_for_Delete(tree, tree->root->childs[childIndex], keyValue);
-        //     }
-        //     else if (node->childs[childIndex + 1]->KeyCount >= T)
-        //     {
-        //         keyPrime = Find_KeyPrime_succecor(node->childs[childIndex + 1], keyValue);
-        //         node->keys[index] = keyPrime;
-        //         Arrange_for_Delete(tree, tree->root->childs[childIndex + 1], keyValue);
-        //     }
-
-            // 자식 양쪽 다 t-1일 경우
-        else
-        {
-            int childIndex = Find_ChildIndex(node, keyValue);
-            BNODE *child_node = Merge_Nodes(node, childIndex);
-            if (node->KeyCount == 0)
-            {
-                tree->root = node->childs[0];
-                free(node);
-                printf("root is changed\n");
-                Heap_Counting('-');
-                Arrange_for_Delete(tree, tree->root, keyValue);
-            }
-            else
-            {
-                Arrange_for_Delete(tree, child_node, keyValue);
-            }
-        }
+        Arrange_for_Delete(tree, node, keyValue);
     }
 }
 

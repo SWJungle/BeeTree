@@ -6,8 +6,6 @@
     1) search == True >> swap 하고 delete
     2) search == False >> 반복[Find_ChildIndex(sub 트리를 결정해야 한다.) > search] 하고 swap 대상 leaf에서 찾고 그 키와 swap한다.
 */
-#define DEBUG 1
-#define M 3
 #define T 2
 typedef struct BtreeNode
 {
@@ -24,41 +22,72 @@ typedef struct Btree
 // Btree라는 구조체는 node포인터를 가진다. (이름이 root)
 // 비트리 루트 노드의 포인터를 가짐으로서 비트리 전체에 관여할 수 있도록한다.
 
+//! ------------------ 함수 선언부 --------------------//
+// MAIN FUNCTION
 BTREENODE *Allocate();
 void Tree_Create(BTREE *);
-void Insert_nonfull(BTREENODE *, int);
 void Insert(BTREE *, int);
-void Insert_Of_N(BTREE *, int);
-void Arrange_for_Delete(BTREE *, BTREENODE *, int);
+void Deletion(BTREE *, int);
 bool Search(BTREENODE *, int);
+
+//SUB FUNCTION
+void Insert_nonfull(BTREENODE *, int);
 void SearchForDel(BTREE *, BTREENODE *, int);
+void Arrange_for_Delete(BTREE *, BTREENODE *, int);
 void Split_Child(BTREENODE *, int);
-int Get_Rand_Int();
-int Find_ChildIndex(BTREENODE *, int);
-bool Swap_Keys_Left(BTREENODE *, int);
-bool Swap_Keys_Right(BTREENODE *, int);
 BTREENODE *Merge_Nodes(BTREENODE *, int);
+
+//UTIL
+void Insert_Of_N(BTREE *, int);
+int Find_ChildIndex(BTREENODE *, int);
+int Find_Value(BTREENODE *, int);
+void Final_Delete(BTREENODE *, int);
+
+void Shift_to_Right(BTREENODE *, int);
+void Shift_to_Left(BTREENODE *, int);
+bool Swap_Keys_Right(BTREENODE *, int);
+bool Swap_Keys_Left(BTREENODE *, int);
+
 int Find_KeyPrime_Presuccecor(BTREENODE *, int);
 int Find_KeyPrime_succecor(BTREENODE *, int);
-void Print_Tree(BTREENODE *, int);
-void Final_Delete(BTREENODE *, int);
-void Deletion(BTREE *, int);
-int Find_Value(BTREENODE *, int);
-void Shift_to_Left(BTREENODE *, int);
-void Shift_to_Right(BTREENODE *, int);
 
+int Get_Rand_Int();
+BTREENODE *Find_Leaf(BTREENODE *, int);
+void Leaf_Node_Pop(BTREENODE *);
+
+
+// Print
+void Print_Tree(BTREENODE *, int);
+void Heap_Counting(char);
+
+//! ------------------ GLOBAL var --------------------//
+unsigned int HEAPCOUNT = 0;
+//! --------------------------------------------------//
+
+//! ------------------- MAIN 함수 --------------------//
 int main()
 {
+    printf("================================= START ===============================\n\n");
     srand((unsigned int)time(NULL));
     BTREE tree;
     Tree_Create(&tree);
+    Print_Tree(tree.root, 0);
+    //Insert_Of_N(&tree, 10);
     Insert(&tree, 10);
+    Print_Tree(tree.root, 0);
     Insert(&tree, 20);
+    Print_Tree(tree.root, 0);
     Insert(&tree, 30);
+    Print_Tree(tree.root, 0);
     Insert(&tree, 40);
+    Print_Tree(tree.root, 0);
     Insert(&tree, 50);
+    Print_Tree(tree.root, 0);
     Insert(&tree, 60);
-
+    Print_Tree(tree.root, 0);
+    Insert(&tree, 80);
+    Print_Tree(tree.root, 0);
+    Insert(&tree, 90);
     Print_Tree(tree.root, 0);
     Deletion(&tree, 20);
     Print_Tree(tree.root, 0);
@@ -72,8 +101,26 @@ int main()
     Print_Tree(tree.root, 0);
     Deletion(&tree, 60);
     Print_Tree(tree.root, 0);
+    Deletion(&tree, 80);
+    Print_Tree(tree.root, 0);
+    Deletion(&tree, 90);
+    Print_Tree(tree.root, 0);
 
-    printf("END");
+    Insert(&tree, 30);
+    Print_Tree(tree.root, 0);
+    Insert(&tree, 20);
+    Print_Tree(tree.root, 0);
+    Insert(&tree, 40);
+    Print_Tree(tree.root, 0);
+    Insert(&tree, 100);
+    Print_Tree(tree.root, 0);
+    Insert(&tree, 80);
+    Print_Tree(tree.root, 0);
+    Insert(&tree, 50);
+    Print_Tree(tree.root, 0);
+
+    printf("\n\n================================= END ===============================\n\n");
+    // Heap_Counting('*');
     return 0;
 }
 
@@ -85,6 +132,7 @@ BTREENODE *Allocate()
     BTREENODE *new_node = (BTREENODE *)malloc(sizeof(BTREENODE));
     // BTREENODE*형태의 new_node 선언 = BTREENODE*의 형태의 반환된 malloc의 주소값
 
+    Heap_Counting('+');
     // new_node(BTREENODE*)를 반환
     return new_node;
 }
@@ -198,6 +246,7 @@ void Insert(BTREE *tree, int keyValue)
     {
         Insert_nonfull(rootNode, keyValue);
     }
+    printf("Insertions [%d] is completed\n\n", keyValue);
 }
 
 void Insert_Of_N(BTREE *tree, int n)
@@ -207,8 +256,6 @@ void Insert_Of_N(BTREE *tree, int n)
     {
         int item = Get_Rand_Int() % 101;
         Insert(tree, item);
-        if (DEBUG)
-            printf("%d ", item);
     }
 }
 
@@ -308,12 +355,14 @@ void SearchForDel(BTREE *tree, BTREENODE *node, int keyValue)
                 {
                     tree->root = node->childs[0];
                     free(node);
+                    printf("root is changed\n");
+                    Heap_Counting('-');
                 }
+
+                //? leaf 바로 위 node에서 leaf를 보는 경우가 없음 (B+Tree와 차이점)
                 Arrange_for_Delete(tree, child_node, keyValue);
             }
-            
         }
-        // return;
     }
 }
 
@@ -403,6 +452,8 @@ void Arrange_for_Delete(BTREE *tree, BTREENODE *node, int keyValue)
                 {
                     tree->root = node->childs[0];
                     free(node);
+                    printf("root is changed \n");
+                    Heap_Counting('-');
                 }
                 Arrange_for_Delete(tree, child_node, keyValue);
             }
@@ -426,6 +477,8 @@ void Arrange_for_Delete(BTREE *tree, BTREENODE *node, int keyValue)
                 {
                     tree->root = node->childs[0];
                     free(node);
+                    printf("root is changed \n");
+                    Heap_Counting('-');
                 }
                 Arrange_for_Delete(tree, child_node, keyValue);
             }
@@ -450,6 +503,8 @@ void Arrange_for_Delete(BTREE *tree, BTREENODE *node, int keyValue)
                 {
                     tree->root = node->childs[0];
                     free(node);
+                    printf("root is changed \n");
+                    Heap_Counting('-');
                 }
                 Arrange_for_Delete(tree, child_node, keyValue);
             }
@@ -471,11 +526,18 @@ void Final_Delete(BTREENODE *node, int index)
         node->keys[i] = node->keys[i + 1];
     }
     node->KeyCount--;
+
+    // ! ----------------------- 추후 확인 --------------------------//
+    if (node->KeyCount == 0)
+    {
+        Leaf_Node_Pop(node);
+    }
     printf("Delete [%d] is completed. :P\n", keyValue);
 
     return;
 }
 
+//! -------------------------------- 추후 확인 -------------------------//
 int Find_ChildIndex(BTREENODE *node, int keyValue)
 {
 
@@ -564,6 +626,9 @@ BTREENODE *Merge_Nodes(BTREENODE *node, int childIndex)
     //! childIndex가 node의 마지막 자식이 아닌 경우
     if (childIndex < node->KeyCount)
     {
+        free(node->childs[childIndex + 1]);
+        printf("Internal is poped \n");
+        Heap_Counting('-');
         // 부모 노드의 childIndex key를 선행 자식 노드의 끝으로 이동
         node->childs[childIndex]->keys[T - 1] = node->keys[childIndex];
         // 부모 노드의 후행 자식 노드의 key들을 선행 자식 노드로 이동
@@ -584,7 +649,7 @@ BTREENODE *Merge_Nodes(BTREENODE *node, int childIndex)
         {
             node->keys[i] = node->keys[i + 1];
         }
-        for (int i = childIndex + 1; i < node->KeyCount; ++i) //! <<---------------- 여기가 문제였다...
+        for (int i = childIndex + 1; i < node->KeyCount; ++i)
         {
             node->childs[i] = node->childs[i + 1];
         }
@@ -595,6 +660,9 @@ BTREENODE *Merge_Nodes(BTREENODE *node, int childIndex)
     //! childIndex가 node의 마지막 자식인 경우
     else
     {
+        free(node->childs[childIndex]);
+        printf("Internal is poped \n");
+        Heap_Counting('-');
         // 부모 노드의 childIndex key를 선행 자식 노드의 처음으로 이동
         node->childs[childIndex - 1]->keys[T - 1] = node->keys[childIndex];
         // 부모 노드의 후행 자식 노드의 key들을 선행 자식 노드로 이동
@@ -609,15 +677,7 @@ BTREENODE *Merge_Nodes(BTREENODE *node, int childIndex)
         }
         // 부모 노드의 선행 자식 노드의 keyCount 갱신
         node->childs[childIndex - 1]->KeyCount = 2 * T - 1;
-        // 부모 노드의 key 갱신 및 child 갱신
-        // for (int i = childIndex; i < node->KeyCount - 1; ++i)
-        // {
-        //     node->keys[i] = node->keys[i + 1];
-        // }
-        // for (int i = childIndex; i < node->KeyCount; ++i)
-        // {
-        //     node->childs[i] = node->childs[i + 1];
-        // }
+
         //! 부모노드의 key count 갱신해야함.
         //! 노드의 key count --;
         node->KeyCount--;
@@ -664,4 +724,27 @@ void Print_Tree(BTREENODE *node, int level)
     }
 
     return;
+}
+
+void Heap_Counting(char operand)
+{
+    if (operand == '+')
+    {
+        HEAPCOUNT++;
+        printf("HEAPCOUNT++\n");
+    }
+    else if (operand == '-')
+    {
+        HEAPCOUNT--;
+        printf("HEAPCOUNT--\n");
+    }
+    printf("Assigned %d struct onto Heap.\n\n", HEAPCOUNT);
+}
+
+void Leaf_Node_Pop(BTREENODE *node)
+{
+    free(node);
+    printf("leaf is poped\n");
+    Heap_Counting('-');
+    //printf("도비는 자유에요! \n");
 }
